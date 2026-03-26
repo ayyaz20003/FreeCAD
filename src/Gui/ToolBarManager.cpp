@@ -841,21 +841,12 @@ void ToolBarManager::onTimer()
 void ToolBarManager::saveState() const
 {
     auto ignoreSave = [](QAction* action) {
-        // If the toggle action is invisible then it's controlled by the application.
-        // In this case the current state is not saved.
-        if (!action->isVisible()) {
-            return true;
-        }
-
-        QVariant property = action->property("DefaultVisibility");
-        if (property.isNull()) {
-            return false;
-        }
-
-        // If DefaultVisibility is Unavailable then never save the state because it's
-        // always controlled by the client code.
-        auto value = static_cast<ToolBarItem::DefaultVisibility>(property.toInt());
-        return value == ToolBarItem::DefaultVisibility::Unavailable;
+        // If the toggle action is invisible then the toolbar is in its default
+        // unavailable state, controlled entirely by the application. Don't save.
+        // If the toggle action IS visible, client code has made it available to
+        // the user (e.g. Sketcher edit mode toolbars via ForceAvailable), so the
+        // user's visibility choice should be persisted.
+        return !action->isVisible();
     };
 
     QList<ToolBar*> toolbars = toolBars();
